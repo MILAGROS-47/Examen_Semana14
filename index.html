@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Pokémon App</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-image: url("img/pokemon.jpg");
+      background-size: cover;
+      font-style: italic;
+      ruby-align: center;
+      color: blueviolet;
+    }
+    
+    .poster {
+      width: 200px;
+      display: inline-block;
+      margin: 10px;
+      text-align: center;
+      font-style: italic;
+    }
+    
+    .white-table {
+      background-color: rgb(238, 237, 199);
+      color: black;
+      font-style: italic;
+    }
+    
+    .pokemon-card {
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+    
+    .pokemon-details {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: rgb(220, 228, 233);
+      color: rgb(160, 17, 226);
+      font-style: italic;
+    }
+    .pokemon-img {
+      width: 250px;
+    }
+  </style>
+</head>
+<body class="body">
+  <div class="container">
+    <h1>Pokémon App</h1>
+    <div class="input-group mb-3">
+      <input id="searchInput" type="text" class="form-control" placeholder="Buscar Pokémon">
+      <div class="input-group-append">
+        <button id="searchButton" class="btn btn-primary" type="button">Buscar</button>
+      </div>
+    </div>
+    <div id="pokemonList"></div>
+    <div id="pokemonDetails"></div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      const apiBaseUrl = "https://pokeapi.co/api/v2";
+
+      // Función para buscar Pokémon por nombre
+      function searchPokemon(query) {
+        axios.get(`${apiBaseUrl}/pokemon/${query}`)
+          .then(function (response) {
+            const pokemon = response.data;
+            showPokemonList([pokemon]);
+          })
+          .catch(function (error) {
+            showError("No se encontró el Pokémon.");
+          });
+      }
+
+      // Función para mostrar la lista de Pokémon
+      function showPokemonList(pokemonList) {
+        let listHtml = "";
+        for (let i = 0; i < pokemonList.length; i++) {
+          const pokemon = pokemonList[i];
+          listHtml += `
+            <div class="card mb-3 pokemon-card">
+              <img src="${pokemon.sprites.front_default}" class="card-img-top pokemon-img" alt="${pokemon.name}">
+              <div class="card-body">
+                <h5 class="card-title">${pokemon.name}</h5>
+                <p class="card-text">Defensa: ${pokemon.stats[2].base_stat}</p>
+                <button class="btn btn-primary details-button" data-pokemon="${pokemon.name}">Ver Detalles</button>
+              </div>
+            </div>
+          `;
+        }
+        $("#pokemonList").html(listHtml);
+
+        // Evento para mostrar detalles al hacer clic en el botón
+        $(".details-button").on("click", function () {
+          const pokemonName = $(this).data("pokemon");
+          showPokemonDetails(pokemonName);
+           });
+  }
+
+  // Función para mostrar los detalles de un Pokémon
+  function showPokemonDetails(pokemonName) {
+    axios.get(`${apiBaseUrl}/pokemon/${pokemonName}`)
+      .then(function (response) {
+        const pokemon = response.data;
+        const detailsHtml = `
+          <div class="pokemon-details">
+            <h2>${pokemon.name}</h2>
+            <img src="${pokemon.sprites.front_default}" alt="${pokemon.name}">
+            <p>Ataque: ${pokemon.stats[1].base_stat}</p>
+            <p>Defensa: ${pokemon.stats[2].base_stat}</p>
+            <p>Ataque Especial: ${pokemon.stats[3].base_stat}</p>
+            <p>Defensa Especial: ${pokemon.stats[4].base_stat}</p>
+            <p>Velocidad: ${pokemon.stats[5].base_stat}</p>
+          </div>
+        `;
+        $("#pokemonDetails").html(detailsHtml);
+      })
+      .catch(function (error) {
+        showError("No se pudo obtener los detalles del Pokémon.");
+      });
+  }
+
+  // Función para mostrar un mensaje de error
+  function showError(message) {
+    const errorHtml = `<div class="alert alert-danger">${message}</div>`;
+    $("#pokemonDetails").html(errorHtml);
+  }
+
+  // Evento de búsqueda al hacer clic en el botón
+  $("#searchButton").on("click", function () {
+    const query = $("#searchInput").val();
+    if (query.length >= 3) {
+      searchPokemon(query.toLowerCase());
+    } else {
+      $("#pokemonList").empty();
+      $("#pokemonDetails").empty();
+    }
+  });
+
+  // Evento de búsqueda al presionar Enter en el campo de búsqueda
+  $("#searchInput").on("keyup", function (event) {
+    if (event.keyCode === 13) {
+      $("#searchButton").click();
+    }
+  });
+});
+</script>
+</body>
+</html>
